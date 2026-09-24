@@ -1,19 +1,19 @@
 // Bei jeder Änderung an index.html oder den Icons die Versionsnummer erhöhen.
-const VERSION = "v3";
+const VERSION = "v5";
 const CACHE = "bindelinie-" + VERSION;
 const FILES = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/favicon-32.png"
+  "./manifest.webmanifest"
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // Jede Datei einzeln: fehlt eine, scheitert nicht gleich die ganze Installation.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => Promise.allSettled(FILES.map(f => c.add(f))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", e => {

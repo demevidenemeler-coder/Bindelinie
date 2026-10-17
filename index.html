@@ -17,6 +17,7 @@
   --slab:#1C2529; --slab-ink:#E9EEF0; --slab-muted:#93A3AB; --slab-line:#34454D;
   --steel:#5E717A; --steel-dark:#43535B;
   --signal:#F5B301; --warn:#FF8A4C; --focus:#0B6FA4;
+  --ok:#2E8B47; --warn-ink:#A9440F; --wait:#B08A00;
   --num:"Bahnschrift","DIN Alternate","DIN 2014","Roboto Condensed","sans-serif-condensed","Arial Narrow",system-ui,sans-serif;
   --txt:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color-scheme:light dark;
@@ -25,6 +26,7 @@
   :root{
     --bg:#10171A; --surface:#182226; --ink:#E4EAED; --muted:#8C9AA2; --line:#2F3D44; --field:#0C1215;
     --slab:#1F2B30; --slab-line:#3A4C54; --focus:#4DB3E6;
+    --ok:#4FBF6A; --warn-ink:#FFB088; --wait:#E0B83A;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -139,6 +141,69 @@ tr.hot td{background:color-mix(in srgb,var(--signal) 13%,transparent)}
 td.hl{background:var(--signal)!important;color:#1C2529;font-weight:700;box-shadow:none}
 .tnote{font-size:.85rem;color:var(--muted);margin:8px 0 0}
 
+/* Zettel */
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.scan{margin-bottom:18px}
+.scanbar{display:flex;flex-wrap:wrap;gap:10px}
+.btn-scan{flex:1 1 220px;display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 16px;
+  border-radius:8px;background:var(--ink);color:var(--bg);font:700 1.05rem var(--txt);cursor:pointer}
+.btn-scan svg{width:24px;height:24px;flex:none}
+.btn-scan:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.btn-scan.busy{opacity:.55;pointer-events:none}
+.scanprog{margin-top:10px;font-size:.9rem;color:var(--muted)}
+.scanprog .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:6px}
+.scanprog .bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .3s}
+.scanmsg{margin:10px 0 0;padding:10px 12px;border-left:4px solid var(--signal);background:var(--surface);font-size:.92rem}
+.scanmsg.err{border-left-color:var(--warn);color:var(--warn-ink)}
+.scanmsg p{margin:0}.scanmsg p+p{margin-top:6px}
+.slist{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stop{display:grid;grid-template-columns:minmax(0,1fr) 52px;align-items:center}
+.sgrid{display:grid;grid-template-columns:minmax(0,1fr) 42px 54px 74px;align-items:center;gap:6px}
+.shead{border-bottom:2px solid var(--line);font-size:.78rem;font-weight:600;color:var(--muted)}
+.shead .sgrid{padding:8px 4px 6px 14px}
+.shead .sgrid span:nth-child(n+2){text-align:right}
+.shead>span:last-child{text-align:center}
+.srow{border-bottom:1px solid var(--line);border-left:5px solid var(--ok)}
+.srow:last-child{border-bottom:0}
+.srow.nocheck{border-left-color:var(--wait)}
+.srow.bad{border-left-color:var(--warn)}
+.sopen{width:100%;min-height:58px;padding:6px 4px 6px 9px;margin:0;background:none;border:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.sid{min-width:0}
+.sid b{display:block;font-family:var(--num);font-size:1.08rem;font-weight:600;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sid small{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow.bad .sid small{color:var(--warn-ink);font-weight:600}
+.sida,.scnt,.slen{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums}
+.sida{font-size:.95rem;color:var(--muted)}
+.sida.guess{opacity:.6}
+.scnt{font-size:1.75rem;font-weight:700;line-height:1}
+.slen{font-size:1.05rem;font-weight:600;white-space:nowrap}
+.sdone{justify-self:center;width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--field);color:transparent;cursor:pointer;
+  display:grid;place-items:center;padding:0}
+.sdone svg{width:20px;height:20px}
+.sdone[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.srow.done .sopen{opacity:.45}
+.srow.done .sid b{text-decoration:line-through}
+.sdet{padding:4px 12px 14px 12px}
+.scell{display:block;height:34px;max-width:100%;object-fit:contain;object-position:left center;margin-bottom:4px;border-radius:4px;background:#fff}
+.sidimg{display:flex;align-items:center;gap:10px;font-size:.78rem;font-weight:600;color:var(--muted)}
+.smsg{margin:10px 0 0;padding:0 0 0 18px;font-size:.88rem;color:var(--warn-ink)}
+.srow.nocheck .smsg{color:var(--muted)}
+.sedit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.sedit label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:3px}
+.sedit input{min-height:46px;font-size:1.2rem;padding:6px 8px}
+.sedit input.uns{border-color:var(--warn)}
+.sbes{margin-top:10px}
+.sbes .lbl{font-size:.78rem;margin-bottom:3px}
+.sbes .lbl.uns{color:var(--warn-ink)}
+.sjn{display:grid;grid-template-columns:1fr 1fr;max-width:200px;border:2px solid var(--line);border-radius:8px;overflow:hidden;background:var(--field)}
+.sjn button{min-height:44px;border:0;background:none;color:var(--ink);font:700 1.2rem var(--num);cursor:pointer}
+.sjn button+button{border-left:2px solid var(--line)}
+.sjn button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.fhint{display:block;font-size:.78rem;color:var(--muted);margin-top:4px}
+.sbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sbtn{flex:1 1 auto;min-height:44px;padding:0 12px;border-radius:8px;border:2px solid var(--line);background:var(--field);color:var(--ink);font:600 .92rem var(--txt);cursor:pointer}
+.sfoot{padding:10px 14px;font-size:.85rem;color:var(--muted);border-top:2px solid var(--line)}
+
 footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
 
 @media (min-width:860px){
@@ -160,12 +225,27 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
   <button type="button" class="btn-reset" id="reset">Neuer Bund</button>
 </header>
 
+<section class="scan" id="scan" aria-label="Zettel">
+  <div class="scanbar">
+    <label class="btn-scan" id="scanBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.6"/></svg>
+      <span>Zettel fotografieren</span>
+      <input type="file" id="scanFile" accept="image/*" class="vh">
+    </label>
+    <button type="button" class="btn-reset" id="scanClear" hidden>Liste leeren</button>
+  </div>
+  <div class="scanprog" id="scanProg" hidden><div class="bar"><i></i></div><span></span></div>
+  <div class="scanmsg" id="scanMsg" hidden></div>
+  <div class="slist" id="scanList" hidden></div>
+</section>
+
 <main>
 <section class="inputs" aria-label="Eingaben">
   <div class="row2">
     <div class="field">
       <label for="br">Breite</label>
       <div class="inwrap"><input id="br" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="1129"><span class="unit">mm</span></div>
+      <span class="fhint">unbesäumt Br, besäumt BrAus</span>
       <span class="ferr" id="err-br"></span>
     </div>
     <div class="field">
@@ -175,10 +255,18 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
     </div>
   </div>
 
-  <div class="field">
-    <label for="gew">Gewicht</label>
-    <div class="inwrap"><input id="gew" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="21400"><span class="unit">kg</span></div>
-    <span class="ferr" id="err-gew"></span>
+  <div class="row2">
+    <div class="field">
+      <label for="gew">Gewicht</label>
+      <div class="inwrap"><input id="gew" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="21400"><span class="unit">kg</span></div>
+      <span class="ferr" id="err-gew"></span>
+    </div>
+    <div class="field">
+      <label for="brin">Einsatzbreite (Br)</label>
+      <div class="inwrap"><input id="brin" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="1285"><span class="unit">mm</span></div>
+      <span class="fhint">nur wenn besäumt oder geteilt</span>
+      <span class="ferr" id="err-brin"></span>
+    </div>
   </div>
 
   <div class="field">
@@ -247,11 +335,15 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
 </details>
 
 <footer>
-  Anzahl nach Werkstabelle. Länge je Band = 2 × (Wanddicke + Breite) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
-  Außen-Ø aus Gewicht, Breite und Innen-Ø bei 7,85 kg/dm³.
+  Anzahl nach Werkstabelle aus Breite und Dicke, gilt für Hand- und Außenumreifung.
+  Breite: unbesäumt Br, besäumt oder geteilt BrAus.
+  Länge je Band = 2 × (Wanddicke + Breite) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
+  Außen-Ø aus Gewicht des ganzen Bundes, Einsatzbreite (Br) und Innen-Ø bei 7,85 kg/dm³ – Teilen und Besäumen ändern ihn nicht.
+  Zettel-Fotos werden nur auf dem Gerät ausgewertet.
 </footer>
 </div>
 
+<script src="scan.js"></script>
 <script>
 "use strict";
 /* ---------- Werkstabelle ---------- */
@@ -302,9 +394,16 @@ function outerDiameter(G,B,Di){
   return Math.sqrt((Di/100)**2+4*A/Math.PI)*100;
 }
 
+/* Zuschnitt: Außen-Ø aus dem ganzen Bund (Einsatzbreite), Band über die Bindebreite */
+function cutLength(G,brIn,brOut,Di,zugCm){
+  const Da=outerDiameter(G,brIn,Di),wall=(Da-Di)/2;
+  const Lexact=2*(wall+brOut)/1000+zugCm/100;
+  return {Da,wall,Lexact,Lcut:Math.ceil(Lexact/CUT_STEP-1e-9)*CUT_STEP};
+}
+
 /* ---------- DOM ---------- */
 const $=id=>document.getElementById(id);
-const elBr=$("br"),elDi=$("di"),elGew=$("gew"),elZug=$("zug"),elRes=$("result");
+const elBr=$("br"),elDi=$("di"),elGew=$("gew"),elBrIn=$("brin"),elZug=$("zug"),elRes=$("result");
 const numCnt=$("numCnt"),subCnt=$("subCnt"),numLen=$("numLen"),subLen=$("subLen");
 const elTotal=$("total"),elWarn=$("warn");
 
@@ -473,9 +572,11 @@ function drawCoil(Da,wall,cnt){
 function calc(){
   clearHL();
   const br=parseNum(elBr.value,true),di=parseNum(elDi.value,false),g=parseNum(elGew.value,true);
+  const brIn=parseNum(elBrIn.value,true);
   let zug=parseNum(elZug.value,false);
 
-  const brOk=isNum(br)&&br>0, diOk=isNum(di)&&di>0, gOk=isNum(g)&&g>0;
+  const brOk=isNum(br)&&br>0, diOk=isNum(di)&&di>0, gOk=isNum(g)&&g>0, brInOk=isNum(brIn)&&brIn>0;
+  fieldState(elBrIn,"err-brin",brIn,brInOk&&brOk&&brIn<br?"Kleiner als Breite – vertauscht?":"");
   fieldState(elBr,"err-br",br,isNum(br)&&br<=0?"Breite muss größer 0 sein":(isNum(br)&&br>B_MAX?"Über 2000 mm – nicht in der Tabelle":""));
   fieldState(elDi,"err-di",di,isNum(di)&&di<D_MIN?"Unter 1,00 mm – nicht in der Tabelle":(isNum(di)&&di>D_MAX?"Über 13,00 mm – nicht in der Tabelle":""));
   fieldState(elGew,"err-gew",g,isNum(g)&&g<=0?"Gewicht muss größer 0 sein":"");
@@ -503,10 +604,9 @@ function calc(){
   // Länge
   let Lcut=null,geo=null;
   if(brOk&&gOk){
-    const Da=outerDiameter(g,br,innerD);
-    const wall=(Da-innerD)/2;
-    const Lexact=2*(wall+br)/1000+zug/100;
-    Lcut=Math.ceil(Lexact/CUT_STEP-1e-9)*CUT_STEP;
+    // Einsatzbreite leer = unbesäumt und ungeteilt, dann ist es dieselbe Breite
+    const {Da,wall,Lexact,Lcut:lc}=cutLength(g,brInOk?brIn:br,br,innerD,zug);
+    Lcut=lc;
     numLen.textContent=fmt(Lcut,2);
     subLen.textContent="exakt "+fmt(Lexact,3)+" m";
     geo={Da,wall};
@@ -536,6 +636,7 @@ function calc(){
   if(auto)drawSide(br,cnt);else drawCoil(geo&&geo.Da,geo&&geo.wall,cnt);
 
   store.set("ub.zug",elZug.value);
+  renderSheet();
 }
 
 /* ---------- Tabelle ---------- */
@@ -559,11 +660,11 @@ function highlight(ri,ci){
 }
 
 /* ---------- Bedienung ---------- */
-[elBr,elDi,elGew,elZug].forEach(el=>{
+[elBr,elDi,elGew,elBrIn,elZug].forEach(el=>{
   el.addEventListener("input",calc);
   el.addEventListener("focus",()=>setTimeout(()=>el.select(),0)); // Tippen überschreibt alten Wert
 });
-const order=[elBr,elDi,elGew];
+const order=[elBr,elDi,elGew,elBrIn];
 order.forEach((el,i)=>el.addEventListener("keydown",e=>{
   if(e.key!=="Enter")return;e.preventDefault();
   if(order[i+1])order[i+1].focus();else el.blur();
@@ -574,7 +675,7 @@ document.querySelectorAll(".stepper button").forEach(b=>b.addEventListener("clic
   elZug.value=fmt(z,z%1?1:0);calc();
 }));
 $("reset").addEventListener("click",()=>{
-  elBr.value="";elDi.value="";elGew.value="";calc();elBr.focus();
+  elBr.value="";elDi.value="";elGew.value="";elBrIn.value="";calc();elBr.focus();
 });
 
 const dimBtn=$("dimBtn");
@@ -586,6 +687,186 @@ function setDims(on){
 }
 dimBtn.addEventListener("click",()=>{setDims(!elRes.classList.contains("show-dims"));calc();});
 setDims(store.get("ub.details")==="1");
+
+/* ---------- Zettel-Liste ----------
+   Foto vom Ausdruck -> eine Zeile je Bund mit Bänderzahl und Zuschnitt. Ersetzt die handschriftlichen Zahlen. */
+const scanList=$("scanList"),scanMsg=$("scanMsg"),scanProg=$("scanProg"),scanBtn=$("scanBtn");
+const SHEET_KEY="ub.sheet";
+const FIELDS=[ // Schlüssel, Beschriftung, Nachkommastellen, Tausenderpunkt erlaubt
+  ["braus","BrAus mm",1,true],["br","Br mm",0,true],["di","Di mm",2,false],
+  ["gew","Gew kg",0,true],["lng","Lng m",0,true],["ida","ID mm",0,true]];
+let sheet={rows:[]},openRow=-1;
+try{const j=JSON.parse(localStorage.getItem(SHEET_KEY)||"null");if(j&&Array.isArray(j.rows))sheet=j;}catch(e){}
+
+function saveSheet(){
+  try{localStorage.setItem(SHEET_KEY,JSON.stringify(sheet));}
+  catch(e){ // Speicher voll: ohne Vorschaubilder
+    try{localStorage.setItem(SHEET_KEY,JSON.stringify({...sheet,rows:sheet.rows.map(r=>({...r,crops:null}))}));}catch(e2){}
+  }
+}
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtIn=(v,d)=>v==null?"":v.toLocaleString("de-DE",{useGrouping:false,minimumFractionDigits:0,maximumFractionDigits:d});
+
+function sheetCalc(r){
+  const id=r.ida||innerD;
+  // unbesäumt zählt Br, besäumt (oder geteilt) BrAus
+  const w=window.BindeScan?BindeScan.bindWidth(r):(r.br||r.braus);
+  let cnt=null,len=null;
+  if(w&&r.di){const ci=colIdx(w),ri=rowIdx(r.di);if(ci>=0&&ri>=0)cnt=ROWS[ri].v[ci];}
+  const chk=window.BindeScan?BindeScan.checkRow(r):{level:"nocheck",msgs:[]};
+  const msgs=[...chk.msgs];let level=chk.level;
+  if(w&&r.di&&cnt===null){msgs.push("Außerhalb der Tabelle");level="bad";}
+  if(r.gew&&w){
+    let z=parseNum(elZug.value,false);if(!isNum(z)||z<0)z=0;
+    const c=cutLength(r.gew,r.br||w,w,id,z);
+    if(c.wall<WALL_MIN||c.Da>DA_MAX){msgs.push("Außen-Ø "+fmt(c.Da,0)+" mm ist unplausibel");level="bad";}
+    else len=c;
+  }
+  if(r.verified&&level!=="bad")level="ok";
+  return {id,w,cnt,len,msgs,level};
+}
+
+function rowSummary(r,c){
+  const note=[c.level==="bad"?"prüfen":c.level==="nocheck"&&!r.verified?"ohne Probe":"",
+    r.besaeumt===true?"bes.":""].filter(Boolean).join(" · ");
+  return `<span class="sid"><b>${esc(r.ident||"?")}</b><small>${note}</small></span>`+
+    `<span class="sida${r.ida?"":" guess"}">${c.id}</span>`+
+    `<span class="scnt">${c.cnt==null?"–":c.cnt}</span>`+
+    `<span class="slen">${c.len?fmt(c.len.Lcut,2)+" m":"–"}</span>`;
+}
+
+function rowDetails(r,c,i){
+  let h="";
+  const cr=r.crops||{};
+  if(cr.ident)h+=`<div class="sidimg">Zettel <img class="scell" src="${cr.ident}" alt="Ident im Foto"></div>`;
+  h+=`<ul class="smsg"${c.msgs.length?"":" hidden"}>${c.msgs.map(m=>"<li>"+esc(m)+"</li>").join("")}</ul>`;
+  h+=`<div class="sedit">`+FIELDS.map(([k,l,d])=>{
+    const uns=(r.unsure||[]).includes(k);
+    return `<div><label for="s${i}${k}">${l}</label>${cr[k]?`<img class="scell" src="${cr[k]}" alt="${l} im Foto">`:""}<input id="s${i}${k}" data-k="${k}" type="text" inputmode="decimal" autocomplete="off" class="${uns?"uns":""}" value="${fmtIn(r[k],d)}"${k==="ida"&&!r.ida?` placeholder="${innerD}"`:""}></div>`;
+  }).join("")+`</div>`;
+  const b=r.besaeumt,bu=(r.unsure||[]).includes("b");
+  h+=`<div class="sbes"><span class="lbl${bu?" uns":""}">Besäumt (B) – gebunden über ${c.w&&c.w===r.braus&&r.braus!==r.br?"BrAus":"Br"}</span>`+
+     (cr.b?`<img class="scell" src="${cr.b}" alt="B im Foto">`:"")+
+     `<div class="sjn"><button type="button" data-b="1" aria-pressed="${b===true}">J</button><button type="button" data-b="0" aria-pressed="${b===false}">N</button></div></div>`;
+  h+=`<div class="sbtns"><button type="button" class="sbtn" data-act="ok">Stimmt so</button>`+
+     `<button type="button" class="sbtn" data-act="calc">In Rechner</button>`+
+     `<button type="button" class="sbtn" data-act="del">Löschen</button></div>`;
+  return h;
+}
+
+const CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+function renderSheet(){
+  const rows=sheet.rows;
+  $("scanClear").hidden=!rows.length;
+  scanList.hidden=!rows.length;
+  if(!rows.length){scanList.innerHTML="";return;}
+  let h=`<div class="shead stop"><div class="sgrid"><span>Ident</span><span>ID</span><span>Bänder</span><span>Zuschnitt</span></div><span>erledigt</span></div>`;
+  let bad=0,nocheck=0,done=0;
+  rows.forEach((r,i)=>{
+    const c=sheetCalc(r);
+    if(c.level==="bad")bad++;else if(c.level==="nocheck")nocheck++;
+    if(r.done)done++;
+    const open=i===openRow;
+    h+=`<div class="srow ${c.level}${r.done?" done":""}" data-i="${i}">`+
+      `<div class="stop"><button type="button" class="sopen sgrid" aria-expanded="${open}">${rowSummary(r,c)}</button>`+
+      `<button type="button" class="sdone" aria-pressed="${!!r.done}" aria-label="Bund ${esc(r.ident)} erledigt">${CHECK_SVG}</button></div>`+
+      (open?`<div class="sdet">${rowDetails(r,c,i)}</div>`:"")+`</div>`;
+  });
+  const parts=[rows.length+" Bunde"];
+  if(bad)parts.push(bad+" prüfen");
+  if(nocheck)parts.push(nocheck+" ohne Gewichtsprobe");
+  if(done)parts.push(done+" erledigt");
+  h+=`<div class="sfoot">${parts.join(" · ")}. Antippen zum Prüfen und Korrigieren.</div>`;
+  scanList.innerHTML=h;
+}
+
+/* nach einer Korrektur nur Kopf und Hinweise der Zeile neu zeichnen, damit das Eingabefeld den Fokus behält */
+function repaintRow(i){
+  const el=scanList.querySelector(`.srow[data-i="${i}"]`);if(!el)return;
+  const r=sheet.rows[i],c=sheetCalc(r);
+  el.className=`srow ${c.level}${r.done?" done":""}`;
+  el.querySelector(".sopen").innerHTML=rowSummary(r,c);
+  const ul=el.querySelector(".smsg");
+  if(ul){ul.hidden=!c.msgs.length;ul.innerHTML=c.msgs.map(m=>"<li>"+esc(m)+"</li>").join("");}
+  const foot=scanList.querySelector(".sfoot");
+  if(foot){
+    let bad=0,nocheck=0,done=0;
+    for(const x of sheet.rows){const l=sheetCalc(x).level;if(l==="bad")bad++;else if(l==="nocheck")nocheck++;if(x.done)done++;}
+    const parts=[sheet.rows.length+" Bunde"];
+    if(bad)parts.push(bad+" prüfen");if(nocheck)parts.push(nocheck+" ohne Gewichtsprobe");if(done)parts.push(done+" erledigt");
+    foot.textContent=parts.join(" · ")+". Antippen zum Prüfen und Korrigieren.";
+  }
+}
+
+scanList.addEventListener("click",e=>{
+  const rowEl=e.target.closest(".srow");if(!rowEl)return;
+  const i=+rowEl.dataset.i,r=sheet.rows[i];
+  if(e.target.closest(".sdone")){r.done=!r.done;saveSheet();renderSheet();return;}
+  if(e.target.closest(".sopen")){openRow=openRow===i?-1:i;renderSheet();return;}
+  const jn=e.target.closest("[data-b]");
+  if(jn){r.besaeumt=jn.dataset.b==="1";r.unsure=(r.unsure||[]).filter(x=>x!=="b");saveSheet();renderSheet();return;}
+  const act=e.target.closest("[data-act]");if(!act)return;
+  if(act.dataset.act==="ok"){r.verified=true;r.unsure=[];openRow=-1;saveSheet();renderSheet();}
+  else if(act.dataset.act==="del"){
+    if(!confirm("Bund "+(r.ident||"")+" aus der Liste löschen?"))return;
+    sheet.rows.splice(i,1);openRow=-1;saveSheet();renderSheet();
+  }else if(act.dataset.act==="calc"){
+    const w=BindeScan.bindWidth(r);
+    elBr.value=fmtIn(w,1);elDi.value=fmtIn(r.di,2);elGew.value=fmtIn(r.gew,0);elBrIn.value=r.br&&r.br!==w?fmtIn(r.br,0):"";
+    if([508,610,762].includes(r.ida))setInner(r.ida);
+    calc();$("result").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+});
+scanList.addEventListener("input",e=>{
+  const inp=e.target.closest("input[data-k]");if(!inp)return;
+  const i=+inp.closest(".srow").dataset.i,r=sheet.rows[i],k=inp.dataset.k;
+  const f=FIELDS.find(x=>x[0]===k),v=parseNum(inp.value,f[3]);
+  r[k]=isNum(v)&&v>0?v:null;
+  if(k==="lng")r.lngCut=false;
+  r.unsure=(r.unsure||[]).filter(x=>x!==k);inp.classList.remove("uns");
+  inp.setAttribute("aria-invalid",Number.isNaN(v)?"true":"false");
+  saveSheet();repaintRow(i);
+});
+scanList.addEventListener("focusin",e=>{const inp=e.target.closest("input[data-k]");if(inp)setTimeout(()=>inp.select(),0);});
+
+function showScanMsg(lines,err){
+  scanMsg.hidden=!lines.length;
+  scanMsg.classList.toggle("err",!!err);
+  scanMsg.innerHTML=lines.map(l=>"<p>"+esc(l)+"</p>").join("");
+}
+
+$("scanFile").addEventListener("change",async e=>{
+  const file=e.target.files&&e.target.files[0];e.target.value="";
+  if(!file)return;
+  if(!window.BindeScan){showScanMsg(["Die Texterkennung fehlt. App einmal mit Internet neu laden."],true);return;}
+  if(sheet.rows.some(r=>!r.done)&&!confirm("Neuen Zettel einlesen? Die jetzige Liste wird ersetzt."))return;
+  scanBtn.classList.add("busy");showScanMsg([]);
+  scanProg.hidden=false;
+  const bar=scanProg.querySelector("i"),txt=scanProg.querySelector("span");
+  try{
+    const res=await BindeScan.scan(file,(t,p)=>{bar.style.width=Math.round(p*100)+"%";txt.textContent=t+" …";});
+    sheet={ts:Date.now(),hasIda:res.hasIda,rows:res.rows.map(r=>({
+      ident:r.ident,ida:r.ida,besaeumt:r.besaeumt,braus:r.braus,br:r.br,di:r.di,gew:r.gew,lng:r.lng,lngCut:r.lngCut,
+      unsure:r.unsure,crops:r.crops,done:false,verified:false}))};
+    openRow=-1;saveSheet();renderSheet();
+    if(!sheet.rows.length){showScanMsg(["Keine Bunde erkannt. Bitte das Blatt gerade, ganz und scharf fotografieren."],true);}
+    else{
+      const lines=[sheet.rows.length+" Bunde erkannt. Grün = Gewichtsprobe bestanden, gelb = ohne Probe, orange = bitte mit dem Zettel vergleichen."];
+      if(sheet.rows.some(r=>r.lngCut))lines.push("Die Spalte Lng ist im Ausdruck abgeschnitten (z. B. „1.6…“). Spalte vor dem Drucken breiter ziehen, dann wird jede Zeile geprüft.");
+      if(!res.hasIda)lines.push("Keine ID-Spalte auf dem Zettel – für alle Bunde gilt "+innerD+" mm (oben im Rechner einstellbar).");
+      showScanMsg(lines,false);
+    }
+  }catch(err){
+    showScanMsg([err&&err.message?err.message:String(err)],true);
+  }finally{
+    scanBtn.classList.remove("busy");scanProg.hidden=true;bar.style.width="0";
+  }
+});
+$("scanClear").addEventListener("click",()=>{
+  if(!confirm("Ganze Liste löschen?"))return;
+  sheet={rows:[]};openRow=-1;saveSheet();renderSheet();showScanMsg([]);
+});
 
 /* gespeicherte Einstellungen */
 const sId=+store.get("ub.innerD");if([508,610,762].includes(sId))setInner(sId);

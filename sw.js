@@ -1,10 +1,17 @@
-// Bei jeder Änderung an index.html oder den Icons die Versionsnummer erhöhen.
-const VERSION = "v5";
+// Bei jeder Änderung an index.html, scan.js oder den Icons die Versionsnummer erhöhen.
+const VERSION = "v6";
 const CACHE = "bindelinie-" + VERSION;
 const FILES = [
   "./",
   "./index.html",
-  "./manifest.webmanifest"
+  "./manifest.webmanifest",
+  "./scan.js",
+  // Texterkennung (Tesseract.js) – lokal, damit Zettel-Fotos offline und ohne Upload ausgewertet werden
+  "./ocr/tesseract.min.js",
+  "./ocr/worker.min.js",
+  "./ocr/tesseract-core-simd-lstm.js",
+  "./ocr/tesseract-core-simd-lstm.wasm",
+  "./ocr/eng.traineddata.gz"
 ];
 
 self.addEventListener("install", e => {
@@ -37,6 +44,9 @@ self.addEventListener("fetch", e => {
     );
     return;
   }
-  // Icons, Manifest: aus dem Cache, sonst Netz.
-  e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
+  // Skripte, Texterkennung, Icons, Manifest: aus dem Cache, sonst Netz (und dann merken).
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req).then(res => {
+    if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+    return res;
+  })));
 });

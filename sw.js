@@ -1,5 +1,5 @@
 // Bei jeder Änderung an index.html, scan.js oder den Icons die Versionsnummer erhöhen.
-const VERSION = "v10";
+const VERSION = "v11";
 const CACHE = "bindelinie-" + VERSION;
 const FILES = [
   "./",

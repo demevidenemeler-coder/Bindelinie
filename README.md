@@ -51,5 +51,5 @@ Blatt gerade, ganz und scharf fotografieren.
 
 ## Update einspielen
 
-Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v10";` hochzählen (`v11`, `v12` …).
+Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v11";` hochzählen (`v12`, `v13` …).
 Sonst bekommen installierte Handys die neuen Icons oder Dateien nicht.

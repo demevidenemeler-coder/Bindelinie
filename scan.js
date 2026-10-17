@@ -26,7 +26,7 @@ const HEAD={
   ident:w=>/FLS|Ident/i.test(w),
   b:    w=>/^B[.…:]*$/.test(w),
   braus:w=>/^B[rt][AÄ]u?s|^BrA|rAus/i.test(w),
-  br:   w=>/^Br[.…:]*$/.test(w),
+  br:   w=>/^[B8][rn][.…:,'`]*$/.test(w),
   di:   w=>/^Di[.…:]*$/.test(w),
   gew:  w=>/^Gew/i.test(w),
   lng:  w=>/^[LlI1|][nm][gq]/.test(w)
@@ -261,6 +261,23 @@ function layout(words,head){
     // die nicht erkannte Überschrift darüber würde sonst die Werte an sich ziehen
     for(let i=cols.length-1;i>=0;i--)if(!cols[i].name&&Math.abs(cols[i].x-x)<hH*1.5)cols.splice(i,1);
     cols.push({name,x});
+  }
+  // Br hat dasselbe Format wie Lng ("1.285" / "843"), steht aber immer direkt rechts neben BrAus
+  const ca=cols.find(c=>c.name==="braus");
+  if(!cols.some(c=>c.name==="br")&&ca){
+    const xs=rows.flatMap(r=>r.words).filter(w=>/^\d[.,]?\d{3}$|^\d{3}$/.test(w.t)).map(dx)
+      .filter(x=>x>ca.x+hH&&x<ca.x+hH*8).sort((p,q)=>p-q);
+    let best=[];
+    for(let i=0;i<xs.length;i++){
+      const grp=xs.filter(x=>Math.abs(x-xs[i])<hH*1.5);
+      if(grp.length>=3&&(!best.length||median(grp)<median(best)-hH))best=grp;  // die nächste Spalte rechts
+      else if(grp.length>best.length&&Math.abs(median(grp)-median(best))<hH)best=grp;
+    }
+    if(best.length>=3){
+      const x=median(best);
+      for(let i=cols.length-1;i>=0;i--)if(!cols[i].name&&Math.abs(cols[i].x-x)<hH*1.5)cols.splice(i,1);
+      cols.push({name:"br",x});
+    }
   }
   const out=[];
   for(const r of rows){
@@ -522,7 +539,8 @@ async function scan(file,progress){
     if(!L.rows.length)throw new Error("Kopfzeile gefunden, aber keine Zeilen darunter erkannt.");
 
     const missing=["braus","br","di","gew"].filter(n=>!L.cols[n]);
-    if(missing.length)throw new Error("Spalte nicht gefunden: "+missing.join(", ")+". Ist sie mit ausgedruckt?");
+    const NAMES={braus:"BrAus",br:"Br",di:"Di",gew:"Gew"};
+    if(missing.length)throw new Error("Spalte "+missing.map(n=>NAMES[n]).join(", ")+" nicht erkannt. Bitte noch einmal fotografieren: Blatt gerade und ganz im Bild, scharf, ohne Schatten und Spiegelung.");
 
     const jobs=[["braus","0123456789.,"],["br","0123456789.,"],["di","0123456789.,"],["gew","0123456789.,"]];
     if(L.cols.lng)jobs.push(["lng","0123456789.,…"]);

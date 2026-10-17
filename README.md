@@ -5,21 +5,24 @@ Läuft im Browser, lässt sich auf dem Handy installieren und funktioniert danac
 
 ## Rechnung
 
-- **Anzahl Bänder** aus der Werkstabelle (Dicke × Breite aus/BrAus). Gilt für Hand- und Außenumreifung.
+- **Breite:** unbesäumt (B = N) zählt **Br**, besäumt (B = J) oder geteilt („1:1 (3)“) zählt **BrAus**.
+- **Anzahl Bänder** aus der Werkstabelle (Dicke × Breite). Gilt für Hand- und Außenumreifung.
 - **Außen-Ø** aus Gewicht des ganzen Bundes, Einsatzbreite (Br) und Innen-Ø, Stahldichte 7,85 kg/dm³.
-  Teilen und Besäumen ändern den Außen-Ø nicht. Einsatzbreite leer = gleich Breite aus.
+  Teilen und Besäumen ändern den Außen-Ø nicht. Einsatzbreite leer = gleich Breite.
 - **Wanddicke** = (Außen-Ø − Innen-Ø) / 2
 - **Ohne Gewicht** = automatische Umreifung: Seitenansicht mit Längsbändern um den Mantel, keine Längenberechnung.
 - **Mit Gewicht** = Handbindung: maßstäbliche Stirnansicht mit Bändern durchs Auge.
 - Bemaßung jeweils über „Details anzeigen“.
-- **Länge je Band** = 2 × (Wanddicke + Breite aus) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
+- **Länge je Band** = 2 × (Wanddicke + Breite) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
 
 ## Zettel fotografieren
 
 Foto vom Ausdruck der Reihenfolge → Liste mit Ident, ID, Bänderzahl und Zuschnitt je Bund.
 Die Texterkennung (Tesseract.js) läuft komplett auf dem Handy, auch offline. Das Foto verlässt das Gerät nicht.
 
-- Gebraucht werden die Spalten **BrAus, Br, Di, Gew**; dazu **Lng** für die Gewichtsprobe und **IDA** für den Innen-Ø.
+- Gebraucht werden die Spalten **B, BrAus, Br, Di, Gew**; dazu **Lng** für die Gewichtsprobe und **IDA** für den Innen-Ø.
+- **B (besäumt):** gelesen aus dem Buchstaben J/N und der grauen Hinterlegung der BrAus-Zelle.
+  Nicht erkannt → orange, gerechnet wird dann mit Br (die breitere, also eher zu lang als zu kurz).
 - **Gewichtsprobe:** Br × Di × Lng × 7,85 muss auf ±5 % zum Gewicht passen. Damit fallen falsch gelesene Ziffern auf.
 - Farben: grün = Probe bestanden, gelb = ohne Probe (Lng fehlt oder ist abgeschnitten), orange = bitte prüfen.
 - Antippen zeigt über jedem Wert den Ausschnitt aus dem Foto; Werte lassen sich dort korrigieren.
@@ -47,5 +50,5 @@ Blatt gerade, ganz und scharf fotografieren.
 
 ## Update einspielen
 
-Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v6";` hochzählen (`v7`, `v8` …).
+Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v7";` hochzählen (`v8`, `v9` …).
 Sonst bekommen installierte Handys die neuen Icons oder Dateien nicht.

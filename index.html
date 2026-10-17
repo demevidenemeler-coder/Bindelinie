@@ -192,6 +192,14 @@ td.hl{background:var(--signal)!important;color:#1C2529;font-weight:700;box-shado
 .sedit label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:3px}
 .sedit input{min-height:46px;font-size:1.2rem;padding:6px 8px}
 .sedit input.uns{border-color:var(--warn)}
+.sbes{margin-top:10px}
+.sbes .lbl{font-size:.78rem;margin-bottom:3px}
+.sbes .lbl.uns{color:var(--warn-ink)}
+.sjn{display:grid;grid-template-columns:1fr 1fr;max-width:200px;border:2px solid var(--line);border-radius:8px;overflow:hidden;background:var(--field)}
+.sjn button{min-height:44px;border:0;background:none;color:var(--ink);font:700 1.2rem var(--num);cursor:pointer}
+.sjn button+button{border-left:2px solid var(--line)}
+.sjn button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.fhint{display:block;font-size:.78rem;color:var(--muted);margin-top:4px}
 .sbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .sbtn{flex:1 1 auto;min-height:44px;padding:0 12px;border-radius:8px;border:2px solid var(--line);background:var(--field);color:var(--ink);font:600 .92rem var(--txt);cursor:pointer}
 .sfoot{padding:10px 14px;font-size:.85rem;color:var(--muted);border-top:2px solid var(--line)}
@@ -235,8 +243,9 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
 <section class="inputs" aria-label="Eingaben">
   <div class="row2">
     <div class="field">
-      <label for="br">Breite aus (BrAus)</label>
+      <label for="br">Breite</label>
       <div class="inwrap"><input id="br" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="1129"><span class="unit">mm</span></div>
+      <span class="fhint">unbesäumt Br, besäumt BrAus</span>
       <span class="ferr" id="err-br"></span>
     </div>
     <div class="field">
@@ -254,7 +263,8 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
     </div>
     <div class="field">
       <label for="brin">Einsatzbreite (Br)</label>
-      <div class="inwrap"><input id="brin" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="1150"><span class="unit">mm</span></div>
+      <div class="inwrap"><input id="brin" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="1285"><span class="unit">mm</span></div>
+      <span class="fhint">nur wenn besäumt oder geteilt</span>
       <span class="ferr" id="err-brin"></span>
     </div>
   </div>
@@ -325,8 +335,9 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
 </details>
 
 <footer>
-  Anzahl nach Werkstabelle aus Breite aus (BrAus) und Dicke, gilt für Hand- und Außenumreifung.
-  Länge je Band = 2 × (Wanddicke + Breite aus) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
+  Anzahl nach Werkstabelle aus Breite und Dicke, gilt für Hand- und Außenumreifung.
+  Breite: unbesäumt Br, besäumt oder geteilt BrAus.
+  Länge je Band = 2 × (Wanddicke + Breite) + Zugabe, Zuschnitt auf 5 cm aufgerundet.
   Außen-Ø aus Gewicht des ganzen Bundes, Einsatzbreite (Br) und Innen-Ø bei 7,85 kg/dm³ – Teilen und Besäumen ändern ihn nicht.
   Zettel-Fotos werden nur auf dem Gerät ausgewertet.
 </footer>
@@ -383,7 +394,7 @@ function outerDiameter(G,B,Di){
   return Math.sqrt((Di/100)**2+4*A/Math.PI)*100;
 }
 
-/* Zuschnitt: Außen-Ø aus dem ganzen Bund (Einsatzbreite), Band über die Breite aus */
+/* Zuschnitt: Außen-Ø aus dem ganzen Bund (Einsatzbreite), Band über die Bindebreite */
 function cutLength(G,brIn,brOut,Di,zugCm){
   const Da=outerDiameter(G,brIn,Di),wall=(Da-Di)/2;
   const Lexact=2*(wall+brOut)/1000+zugCm/100;
@@ -565,7 +576,7 @@ function calc(){
   let zug=parseNum(elZug.value,false);
 
   const brOk=isNum(br)&&br>0, diOk=isNum(di)&&di>0, gOk=isNum(g)&&g>0, brInOk=isNum(brIn)&&brIn>0;
-  fieldState(elBrIn,"err-brin",brIn,brInOk&&brOk&&brIn<br?"Kleiner als Breite aus – vertauscht?":"");
+  fieldState(elBrIn,"err-brin",brIn,brInOk&&brOk&&brIn<br?"Kleiner als Breite – vertauscht?":"");
   fieldState(elBr,"err-br",br,isNum(br)&&br<=0?"Breite muss größer 0 sein":(isNum(br)&&br>B_MAX?"Über 2000 mm – nicht in der Tabelle":""));
   fieldState(elDi,"err-di",di,isNum(di)&&di<D_MIN?"Unter 1,00 mm – nicht in der Tabelle":(isNum(di)&&di>D_MAX?"Über 13,00 mm – nicht in der Tabelle":""));
   fieldState(elGew,"err-gew",g,isNum(g)&&g<=0?"Gewicht muss größer 0 sein":"");
@@ -593,7 +604,7 @@ function calc(){
   // Länge
   let Lcut=null,geo=null;
   if(brOk&&gOk){
-    // Einsatzbreite leer = ungeteilter Bund, dann gilt die Breite aus
+    // Einsatzbreite leer = unbesäumt und ungeteilt, dann ist es dieselbe Breite
     const {Da,wall,Lexact,Lcut:lc}=cutLength(g,brInOk?brIn:br,br,innerD,zug);
     Lcut=lc;
     numLen.textContent=fmt(Lcut,2);
@@ -698,23 +709,26 @@ const fmtIn=(v,d)=>v==null?"":v.toLocaleString("de-DE",{useGrouping:false,minimu
 
 function sheetCalc(r){
   const id=r.ida||innerD;
+  // unbesäumt zählt Br, besäumt (oder geteilt) BrAus
+  const w=window.BindeScan?BindeScan.bindWidth(r):(r.br||r.braus);
   let cnt=null,len=null;
-  if(r.braus&&r.di){const ci=colIdx(r.braus),ri=rowIdx(r.di);if(ci>=0&&ri>=0)cnt=ROWS[ri].v[ci];}
+  if(w&&r.di){const ci=colIdx(w),ri=rowIdx(r.di);if(ci>=0&&ri>=0)cnt=ROWS[ri].v[ci];}
   const chk=window.BindeScan?BindeScan.checkRow(r):{level:"nocheck",msgs:[]};
   const msgs=[...chk.msgs];let level=chk.level;
-  if(r.braus&&r.di&&cnt===null){msgs.push("Außerhalb der Tabelle");level="bad";}
-  if(r.gew&&r.braus){
+  if(w&&r.di&&cnt===null){msgs.push("Außerhalb der Tabelle");level="bad";}
+  if(r.gew&&w){
     let z=parseNum(elZug.value,false);if(!isNum(z)||z<0)z=0;
-    const c=cutLength(r.gew,r.br||r.braus,r.braus,id,z);
+    const c=cutLength(r.gew,r.br||w,w,id,z);
     if(c.wall<WALL_MIN||c.Da>DA_MAX){msgs.push("Außen-Ø "+fmt(c.Da,0)+" mm ist unplausibel");level="bad";}
     else len=c;
   }
   if(r.verified&&level!=="bad")level="ok";
-  return {id,cnt,len,msgs,level};
+  return {id,w,cnt,len,msgs,level};
 }
 
 function rowSummary(r,c){
-  const note=c.level==="bad"?"prüfen":c.level==="nocheck"?(r.verified?"":"ohne Probe"):"";
+  const note=[c.level==="bad"?"prüfen":c.level==="nocheck"&&!r.verified?"ohne Probe":"",
+    r.besaeumt===true?"bes.":""].filter(Boolean).join(" · ");
   return `<span class="sid"><b>${esc(r.ident||"?")}</b><small>${note}</small></span>`+
     `<span class="sida${r.ida?"":" guess"}">${c.id}</span>`+
     `<span class="scnt">${c.cnt==null?"–":c.cnt}</span>`+
@@ -730,6 +744,10 @@ function rowDetails(r,c,i){
     const uns=(r.unsure||[]).includes(k);
     return `<div><label for="s${i}${k}">${l}</label>${cr[k]?`<img class="scell" src="${cr[k]}" alt="${l} im Foto">`:""}<input id="s${i}${k}" data-k="${k}" type="text" inputmode="decimal" autocomplete="off" class="${uns?"uns":""}" value="${fmtIn(r[k],d)}"${k==="ida"&&!r.ida?` placeholder="${innerD}"`:""}></div>`;
   }).join("")+`</div>`;
+  const b=r.besaeumt,bu=(r.unsure||[]).includes("b");
+  h+=`<div class="sbes"><span class="lbl${bu?" uns":""}">Besäumt (B) – gebunden über ${c.w&&c.w===r.braus&&r.braus!==r.br?"BrAus":"Br"}</span>`+
+     (cr.b?`<img class="scell" src="${cr.b}" alt="B im Foto">`:"")+
+     `<div class="sjn"><button type="button" data-b="1" aria-pressed="${b===true}">J</button><button type="button" data-b="0" aria-pressed="${b===false}">N</button></div></div>`;
   h+=`<div class="sbtns"><button type="button" class="sbtn" data-act="ok">Stimmt so</button>`+
      `<button type="button" class="sbtn" data-act="calc">In Rechner</button>`+
      `<button type="button" class="sbtn" data-act="del">Löschen</button></div>`;
@@ -786,13 +804,16 @@ scanList.addEventListener("click",e=>{
   const i=+rowEl.dataset.i,r=sheet.rows[i];
   if(e.target.closest(".sdone")){r.done=!r.done;saveSheet();renderSheet();return;}
   if(e.target.closest(".sopen")){openRow=openRow===i?-1:i;renderSheet();return;}
+  const jn=e.target.closest("[data-b]");
+  if(jn){r.besaeumt=jn.dataset.b==="1";r.unsure=(r.unsure||[]).filter(x=>x!=="b");saveSheet();renderSheet();return;}
   const act=e.target.closest("[data-act]");if(!act)return;
   if(act.dataset.act==="ok"){r.verified=true;r.unsure=[];openRow=-1;saveSheet();renderSheet();}
   else if(act.dataset.act==="del"){
     if(!confirm("Bund "+(r.ident||"")+" aus der Liste löschen?"))return;
     sheet.rows.splice(i,1);openRow=-1;saveSheet();renderSheet();
   }else if(act.dataset.act==="calc"){
-    elBr.value=fmtIn(r.braus,1);elDi.value=fmtIn(r.di,2);elGew.value=fmtIn(r.gew,0);elBrIn.value=fmtIn(r.br,0);
+    const w=BindeScan.bindWidth(r);
+    elBr.value=fmtIn(w,1);elDi.value=fmtIn(r.di,2);elGew.value=fmtIn(r.gew,0);elBrIn.value=r.br&&r.br!==w?fmtIn(r.br,0):"";
     if([508,610,762].includes(r.ida))setInner(r.ida);
     calc();$("result").scrollIntoView({behavior:"smooth",block:"start"});
   }
@@ -826,7 +847,7 @@ $("scanFile").addEventListener("change",async e=>{
   try{
     const res=await BindeScan.scan(file,(t,p)=>{bar.style.width=Math.round(p*100)+"%";txt.textContent=t+" …";});
     sheet={ts:Date.now(),hasIda:res.hasIda,rows:res.rows.map(r=>({
-      ident:r.ident,ida:r.ida,braus:r.braus,br:r.br,di:r.di,gew:r.gew,lng:r.lng,lngCut:r.lngCut,
+      ident:r.ident,ida:r.ida,besaeumt:r.besaeumt,braus:r.braus,br:r.br,di:r.di,gew:r.gew,lng:r.lng,lngCut:r.lngCut,
       unsure:r.unsure,crops:r.crops,done:false,verified:false}))};
     openRow=-1;saveSheet();renderSheet();
     if(!sheet.rows.length){showScanMsg(["Keine Bunde erkannt. Bitte das Blatt gerade, ganz und scharf fotografieren."],true);}

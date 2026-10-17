@@ -24,6 +24,7 @@ const ID_LIST=[508,610,762];
 const HEAD={
   ida:  w=>/^[I1l|]?DA\b|^[I1l|]?DA[.…]/i.test(w),
   ident:w=>/FLS|Ident/i.test(w),
+  b:    w=>/^B[.…:]*$/.test(w),
   braus:w=>/^B[rt][AÄ]u?s|^BrA|rAus/i.test(w),
   br:   w=>/^Br[.…:]*$/.test(w),
   di:   w=>/^Di[.…:]*$/.test(w),
@@ -85,6 +86,16 @@ function bradley(G,win,t){
     }
   }
   return {w,h,g:out};
+}
+
+/* Hintergrundhelligkeit einer Zelle: Median, damit die Schrift nicht mitzählt */
+function medianIn(G,box){
+  const x0=Math.max(0,Math.floor(box.x0)),x1=Math.min(G.w,Math.ceil(box.x1));
+  const y0=Math.max(0,Math.floor(box.y0)),y1=Math.min(G.h,Math.ceil(box.y1));
+  const hist=new Uint32Array(256);let n=0;
+  for(let y=y0;y<y1;y+=2)for(let x=x0;x<x1;x+=2){hist[G.g[y*G.w+x]]++;n++;}
+  let c=0;for(let i=0;i<256;i++){c+=hist[i];if(c*2>=n)return i;}
+  return 255;
 }
 
 function otsu(vals){
@@ -232,13 +243,17 @@ function layout(words,head){
   // Spalten zuordnen; Spaltenmitten wandern mit (Perspektive)
   const cols=merged.map(a=>({name:a.name,x:a.x}));
   // Überschrift nicht gelesen: Spalte am Zahlenformat erkennen (Di hat immer zwei Nachkommastellen usw.)
-  const SHAPE={di:/^\d{1,2}[.,]\d{2}$/,gew:/^\d{2}[.,]\d{3}$/,braus:/^(\d[.,])?\d{3}[.,]\d$/};
+  const SHAPE={di:/^\d{1,2}[.,]\d{2}$/,gew:/^\d{2}[.,]\d{3}$/,braus:/^(\d[.,])?\d{3}[.,]\d$/,b:/^[JN]$/};
   for(const name in SHAPE){
     if(cols.some(c=>c.name===name))continue;
     const xs=rows.flatMap(r=>r.words).filter(w=>SHAPE[name].test(w.t)).map(dx).sort((p,q)=>p-q);
     let best=[];
     for(let i=0;i<xs.length;i++){const grp=xs.filter(x=>Math.abs(x-xs[i])<hH*1.5);if(grp.length>best.length)best=grp;}
-    if(best.length>=3)cols.push({name,x:median(best)});
+    if(best.length<3)continue;
+    const x=median(best);
+    // die nicht erkannte Überschrift darüber würde sonst die Werte an sich ziehen
+    for(let i=cols.length-1;i>=0;i--)if(!cols[i].name&&Math.abs(cols[i].x-x)<hH*1.5)cols.splice(i,1);
+    cols.push({name,x});
   }
   const out=[];
   for(const r of rows){
@@ -290,6 +305,8 @@ function layout(words,head){
     const wmax=widths.length?widths[Math.floor(widths.length*.85)]*1.12:hH*4.5;
     geo[c.name]={right,a:a0,k,w:wmax};
   }
+  // Spalte B (besäumt J/N) nicht gefunden: sie steht direkt links neben BrAus
+  if(!geo.b&&geo.braus){const c=geo.braus;geo.b={right:true,a:c.a-c.w-hH*.2,k:c.k,w:hH*2.8};}
   return {b,hH,rows:out,cols:geo,dx,dy};
 }
 
@@ -343,6 +360,8 @@ const FORMAT={
   gew:  s=>{const c=core(s);if(!/^\d{1,2}[.,]?\d{3}$/.test(c))return null;const v=+digits(c);return v>=500&&v<=45000?v:null;},
   // Lng: "843" oder "1.612"; abgeschnitten ("1.6...") ist wertlos
   lng:  s=>{if(lngCut(s))return null;const c=core(s);if(!/^\d{2,3}$|^\d[.,]?\d{3}$/.test(c))return null;const v=+digits(c);return v>=50&&v<=6000?v:null;},
+  // B (besäumt): J oder N
+  b:    s=>{const t=String(s||"").toUpperCase();return /^\W*J\W*$/.test(t)?true:/^\W*N\W*$/.test(t)?false:null;},
   // IDA: nur die bekannten Werte; 760 steht im System für 762
   ida:  s=>{const d=digits(s);for(const v of ID_LIST)if(d.includes(String(v)))return v;return d.includes("760")?762:null;}
 };
@@ -353,11 +372,25 @@ function weightRatio(r){
   return r.br/1000*r.di/1000*r.lng*RHO*1000/r.gew;
 }
 
+/* Geteilter Bund (1:1 (3) usw.): BrAus ist ein Bruchteil von Br */
+function isSplit(r){return !!(r.braus&&r.br&&r.braus<r.br*.75);}
+
+/* Breite, über die gebunden wird: besäumt oder geteilt -> BrAus, sonst Br (im Zweifel Br, das ist die breitere) */
+function bindWidth(r){
+  if(r.braus&&(r.besaeumt===true||isSplit(r)))return r.braus;
+  return r.br||r.braus||null;
+}
+
 /* Prüfung einer Zeile; wird auch von der Liste nach Korrekturen benutzt.
    level: "ok" = Gewichtsprobe bestanden, "nocheck" = plausibel, aber ohne Probe (Lng fehlt), "bad" = bitte prüfen */
 function checkRow(r){
   const msgs=[];let bad=false;
-  for(const [k,l] of [["braus","BrAus"],["br","Br"],["di","Di"],["gew","Gew"]])if(!r[k]){msgs.push(l+" fehlt");bad=true;}
+  for(const [k,l] of [["braus","BrAus"],["br","Br"],["di","Di"],["gew","Gew"]]){
+    if(r[k])continue;
+    if(k==="braus"&&r.besaeumt===false)continue;   // unbesäumt zählt Br, BrAus wird nicht gebraucht
+    msgs.push(l+" fehlt");bad=true;
+  }
+  if(r.besaeumt==null&&!isSplit(r)){msgs.push("Besäumt J/N nicht gelesen – mit Br gerechnet");bad=true;}
   const q=weightRatio(r);
   let checked=false;
   if(q!==null){
@@ -369,7 +402,7 @@ function checkRow(r){
     for(let n=2;n<=8&&!ok;n++)ok=r.braus*n<=r.br+0.5&&r.braus*n>=r.br-70;
     if(!ok){msgs.push("BrAus passt nicht zu Br");bad=true;}
   }
-  const LBL={ida:"ID",braus:"BrAus",br:"Br",di:"Di",gew:"Gew",lng:"Lng"};
+  const LBL={ida:"ID",b:"Besäumt",braus:"BrAus",br:"Br",di:"Di",gew:"Gew",lng:"Lng"};
   const uns=(r.unsure||[]).filter(k=>r[k]!=null);
   if(uns.length){msgs.push("unsicher gelesen: "+uns.map(k=>LBL[k]).join(", "));bad=true;}
   return {level:bad?"bad":checked?"ok":"nocheck",msgs};
@@ -378,8 +411,8 @@ function checkRow(r){
 /* Mehrheit aus mehreren Lesarten; ohne Mehrheit gilt die erste und der Wert ist unsicher */
 function vote(vals){
   const n=new Map();for(const v of vals)if(v!=null)n.set(v,(n.get(v)||0)+1);
-  let best=null,bc=0;for(const [v,c] of n)if(c>bc){best=v;bc=c;}
-  if(bc>=2)return {v:best,sure:true};
+  let best=null,bc=0,second=0;for(const [v,c] of n)if(c>bc){second=bc;best=v;bc=c;}else if(c>second)second=c;
+  if(bc>=2&&bc>second)return {v:best,sure:true};
   const first=vals.find(v=>v!=null);
   return {v:first==null?null:first,sure:false};
 }
@@ -418,7 +451,7 @@ function readIdent(reads){
 /* Ausschnitte der Zellen aus dem Foto, damit man jeden Wert direkt mit dem Zettel vergleichen kann */
 function cellCrops(src,L,r){
   const out={};
-  for(const n of ["ident","ida","braus","br","di","gew","lng"]){
+  for(const n of ["ident","ida","b","braus","br","di","gew","lng"]){
     const bx=cellBox(L,r,n);if(!bx)continue;
     const x0=Math.max(0,bx.x0),x1=Math.min(src.width,bx.x1),y0=Math.max(0,bx.y0),y1=Math.min(src.height,bx.y1);
     if(x1-x0<4||y1-y0<4)continue;
@@ -468,6 +501,7 @@ async function scan(file,progress){
     if(L.cols.lng)jobs.push(["lng","0123456789.,…"]);
     if(L.cols.ida)jobs.push(["ida","0123456789"]);
     if(L.cols.ident)jobs.push(["ident","ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"]);
+    if(L.cols.b)jobs.push(["b","JN"]);
     // jede Spalte zweimal: eigener Schwellwert je Zelle und adaptives Schwarzweißbild
     const second={},third={};
     for(let i=0;i<jobs.length;i++){
@@ -492,12 +526,27 @@ async function scan(file,progress){
       const fits=v=>v!=null&&!checkRow({braus:v,br:w.vals.br}).msgs.some(m=>/BrAus passt/.test(m));
       const ba=w.vals.br&&cand.braus.some(fits)?vote(cand.braus.map(v=>fits(v)?v:null)):vote(cand.braus);
       if(!id.sure&&id.v!=null&&cand.ida.every(v=>v==null||v===id.v))id.sure=true;
+      // Besäumt: Buchstabe aus drei Lesarten plus Hinterlegung – bei "J" ist die BrAus-Zelle im Ausdruck grau
+      let bs={v:null,sure:false};
+      {
+        const ab=cellBox(L,r,"braus"),rb=cellBox(L,r,"br");
+        let shade=null,strong=false;
+        // markierte (dunkle) Zeile: Hinterlegung nicht erkennbar
+        if(ab&&rb&&medianIn(G,rb)>100){const ma=medianIn(Gb,ab),mr=medianIn(Gb,rb);{const d=mr-ma;shade=d>15?true:d<7?false:null;strong=d>25||Math.abs(d)<4;}}
+        const ocr=L.cols.b?[FORMAT.b(second.b[i]),FORMAT.b(third.b[i]),FORMAT.b(first("b"))].filter(v=>v!=null):[];
+        const agree=ocr.every(v=>v===ocr[0]);
+        if(ocr.length&&agree&&(shade===null||shade===ocr[0]))bs={v:ocr[0],sure:ocr.length>=2||shade!==null};
+        else if(!ocr.length&&shade!==null)bs={v:shade,sure:strong};
+        else if(shade!==null&&strong)bs={v:shade,sure:false};
+        else bs=vote([...ocr,shade]);
+      }
       const unsure=[...w.unsure];
+      if(!bs.sure&&bs.v!=null)unsure.push("b");
       if(!ba.sure&&ba.v!=null)unsure.push("braus");
       if(!id.sure&&id.v!=null)unsure.push("ida");
       return {
         ident:readIdent(L.cols.ident?[second.ident[i],third.ident[i],first("ident")]:[]),
-        ida:id.v,braus:ba.v,br:w.vals.br,di:w.vals.di,gew:w.vals.gew,lng:w.vals.lng,
+        ida:id.v,besaeumt:bs.v,braus:ba.v,br:w.vals.br,di:w.vals.di,gew:w.vals.gew,lng:w.vals.lng,
         lngCut:cut,
         unsure,
         crops:cellCrops(src,L,r),
@@ -520,5 +569,5 @@ async function scan(file,progress){
   }
 }
 
-window.BindeScan={scan,checkRow};
+window.BindeScan={scan,checkRow,bindWidth};
 })();

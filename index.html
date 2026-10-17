@@ -149,7 +149,9 @@ td.hl{background:var(--signal)!important;color:#1C2529;font-weight:700;box-shado
   border-radius:8px;background:var(--ink);color:var(--bg);font:700 1.05rem var(--txt);cursor:pointer}
 .btn-scan svg{width:24px;height:24px;flex:none}
 .btn-scan:focus-within{outline:3px solid var(--focus);outline-offset:2px}
-.btn-scan.busy{opacity:.55;pointer-events:none}
+.btn-scan.busy,.btn-pick.busy{opacity:.55;pointer-events:none}
+.btn-pick{display:flex;align-items:center;justify-content:center}
+.btn-pick:focus-within{outline:3px solid var(--focus);outline-offset:2px}
 .scanprog{margin-top:10px;font-size:.9rem;color:var(--muted)}
 .scanprog .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:6px}
 .scanprog .bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .3s}
@@ -230,8 +232,9 @@ footer{margin-top:22px;font-size:.8rem;color:var(--muted);line-height:1.5}
     <label class="btn-scan" id="scanBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.6"/></svg>
       <span>Zettel fotografieren</span>
-      <input type="file" id="scanFile" accept="image/*" class="vh">
+      <input type="file" id="scanFile" accept="image/*" capture="environment" class="vh">
     </label>
+    <label class="btn-reset btn-pick" id="pickBtn">Bild wählen<input type="file" id="pickFile" accept="image/*" class="vh"></label>
     <button type="button" class="btn-reset" id="scanClear" hidden>Liste leeren</button>
   </div>
   <div class="scanprog" id="scanProg" hidden><div class="bar"><i></i></div><span></span></div>
@@ -836,12 +839,13 @@ function showScanMsg(lines,err){
   scanMsg.innerHTML=lines.map(l=>"<p>"+esc(l)+"</p>").join("");
 }
 
-$("scanFile").addEventListener("change",async e=>{
+// Kamera direkt (capture) oder ein vorhandenes Bild aus der Galerie
+async function onPhoto(e){
   const file=e.target.files&&e.target.files[0];e.target.value="";
   if(!file)return;
   if(!window.BindeScan){showScanMsg(["Die Texterkennung fehlt. App einmal mit Internet neu laden."],true);return;}
   if(sheet.rows.some(r=>!r.done)&&!confirm("Neuen Zettel einlesen? Die jetzige Liste wird ersetzt."))return;
-  scanBtn.classList.add("busy");showScanMsg([]);
+  scanBtn.classList.add("busy");$("pickBtn").classList.add("busy");showScanMsg([]);
   scanProg.hidden=false;
   const bar=scanProg.querySelector("i"),txt=scanProg.querySelector("span");
   try{
@@ -860,9 +864,11 @@ $("scanFile").addEventListener("change",async e=>{
   }catch(err){
     showScanMsg([err&&err.message?err.message:String(err)],true);
   }finally{
-    scanBtn.classList.remove("busy");scanProg.hidden=true;bar.style.width="0";
+    scanBtn.classList.remove("busy");$("pickBtn").classList.remove("busy");scanProg.hidden=true;bar.style.width="0";
   }
-});
+}
+$("scanFile").addEventListener("change",onPhoto);
+$("pickFile").addEventListener("change",onPhoto);
 $("scanClear").addEventListener("click",()=>{
   if(!confirm("Ganze Liste löschen?"))return;
   sheet={rows:[]};openRow=-1;saveSheet();renderSheet();showScanMsg([]);

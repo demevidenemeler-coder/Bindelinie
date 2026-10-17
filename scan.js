@@ -231,6 +231,13 @@ function layout(words,head){
     if(r&&Math.abs(y-r.y)<hH*.65){r.ys.push(y);r.y=median(r.ys);}
     else rows.push({y,ys:[y],words:[]});
   }
+  // zwei Zeilen dichter als der halbe übliche Zeilenabstand sind eine (doppelt erkannte) Zeile
+  if(rows.length>3){
+    const gaps=rows.slice(1).map((r,i)=>r.y-rows[i].y),step=median(gaps);
+    for(let i=rows.length-1;i>0;i--)if(rows[i].y-rows[i-1].y<step*.55){
+      rows[i-1].ys.push(...rows[i].ys);rows[i-1].y=median(rows[i-1].ys);rows.splice(i,1);
+    }
+  }
   // unter der Tabelle (Detailbereich "Verwendungszweck", "Bemerkung") ist Schluss
   const foot=words.filter(w=>dy(w)>hY&&/Verwendung|Bemerkung/i.test(w.t)).map(dy);
   if(foot.length){const fy=Math.min(...foot);while(rows.length&&rows[rows.length-1].y>fy-hH*.5)rows.pop();}
@@ -437,7 +444,9 @@ function pickWeighed(cands){
   rec(0,{});
   const out={},unsure=[];
   for(const k of keys){
-    if(best){out[k]=best.vals[k];continue;}
+    // auch mit bestandener Probe: nur eine Lesart dafür = unsicher (eine falsche dritte Ziffer
+    // ändert das Gewicht um 1–3 %, das liegt in der Streuung der Zettelwerte selbst)
+    if(best){out[k]=best.vals[k];if(best.vals[k]!=null&&cnt(k,best.vals[k])<2)unsure.push(k);continue;}
     const r=vote(cands[k]);out[k]=r.v;if(!r.sure&&r.v!=null)unsure.push(k);
   }
   return {vals:out,unsure};
@@ -464,15 +473,32 @@ function cellCrops(src,L,r){
   return out;
 }
 
+/* Foto öffnen: erst createImageBitmap, sonst als <img> (anderer Decoder, verkraftet manche Fotos besser).
+   HEIC/HEIF ("hohe Effizienz") kann Chrome auf Android gar nicht lesen – dann eine klare Meldung. */
+async function decodePhoto(file){
+  try{const b=await createImageBitmap(file);return {src:b,w:b.width,h:b.height,done:()=>{if(b.close)b.close();}};}
+  catch(e){}
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();img.src=url;await img.decode();
+    if(img.naturalWidth&&img.naturalHeight)return {src:img,w:img.naturalWidth,h:img.naturalHeight,done:()=>URL.revokeObjectURL(url)};
+  }catch(e){}
+  URL.revokeObjectURL(url);
+  const type=(file.type||"").toLowerCase(),name=(file.name||"").toLowerCase();
+  if(/hei[cf]/.test(type)||/\.hei[cf]$/.test(name))
+    throw new Error("Das Foto ist im HEIC-Format („hohe Effizienz“), das der Browser nicht öffnen kann. In der Kamera-App unter Einstellungen → Bildformat/Hohe Effizienz auf JPEG stellen und neu fotografieren.");
+  throw new Error("Das Foto lässt sich nicht öffnen"+(type?" ("+type+")":"")+". Bitte als normales JPEG-Foto aufnehmen – z. B. direkt über die Kamera im Auswahldialog statt aus der Galerie.");
+}
+
 /* ---------- Hauptfunktion ---------- */
 async function scan(file,progress){
   const say=(t,p)=>{if(progress)progress(t,p);};
   say("Foto laden",0);
-  const bmp=await createImageBitmap(file);
-  const s=Math.min(1,MAXSIDE/Math.max(bmp.width,bmp.height));
-  const src=document.createElement("canvas");src.width=Math.round(bmp.width*s);src.height=Math.round(bmp.height*s);
-  src.getContext("2d").drawImage(bmp,0,0,src.width,src.height);
-  if(bmp.close)bmp.close();
+  const ph=await decodePhoto(file);
+  const s=Math.min(1,MAXSIDE/Math.max(ph.w,ph.h));
+  const src=document.createElement("canvas");src.width=Math.round(ph.w*s);src.height=Math.round(ph.h*s);
+  src.getContext("2d").drawImage(ph.src,0,0,src.width,src.height);
+  ph.done();
   const G=toGray(src.getContext("2d").getImageData(0,0,src.width,src.height));
   // Seite: ungefiltert (Kopfzeile bleibt lesbar); Zellen: weichgezeichnet gegen das Druckraster
   const Gi={w:G.w,h:G.h,g:new Uint8ClampedArray(G.g)};

@@ -23,6 +23,7 @@ Die Texterkennung (Tesseract.js) läuft komplett auf dem Handy, auch offline. Da
 - Gebraucht werden die Spalten **B, BrAus, Br, Di, Gew**; dazu **Lng** für die Gewichtsprobe und **IDA** für den Innen-Ø.
 - **B (besäumt):** gelesen aus dem Buchstaben J/N und der grauen Hinterlegung der BrAus-Zelle.
   Nicht erkannt → orange, gerechnet wird dann mit Br (die breitere, also eher zu lang als zu kurz).
+  Geteilte Bunde sind immer J; steht bei einem geteilten Bund N, wird die Zeile orange.
 - **Gewichtsprobe:** Br × Di × Lng × 7,85 muss auf ±5 % zum Gewicht passen. Damit fallen falsch gelesene Ziffern auf.
 - Farben: grün = Probe bestanden, gelb = ohne Probe (Lng fehlt oder ist abgeschnitten), orange = bitte prüfen.
 - Antippen zeigt über jedem Wert den Ausschnitt aus dem Foto; Werte lassen sich dort korrigieren.
@@ -50,5 +51,5 @@ Blatt gerade, ganz und scharf fotografieren.
 
 ## Update einspielen
 
-Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v7";` hochzählen (`v8`, `v9` …).
+Nach jeder Änderung an `index.html`, `scan.js` oder den Icons in `sw.js` die Zeile `const VERSION = "v8";` hochzählen (`v9`, `v10` …).
 Sonst bekommen installierte Handys die neuen Icons oder Dateien nicht.

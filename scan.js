@@ -391,6 +391,7 @@ function checkRow(r){
     msgs.push(l+" fehlt");bad=true;
   }
   if(r.besaeumt==null&&!isSplit(r)){msgs.push("Besäumt J/N nicht gelesen – mit Br gerechnet");bad=true;}
+  if(r.besaeumt===false&&isSplit(r)){msgs.push("Geteilt, aber B = N – geteilte Bunde sind immer J");bad=true;}
   const q=weightRatio(r);
   let checked=false;
   if(q!==null){
@@ -540,6 +541,8 @@ async function scan(file,progress){
         else if(shade!==null&&strong)bs={v:shade,sure:false};
         else bs=vote([...ocr,shade]);
       }
+      // geteilt ist immer besäumt
+      if(isSplit({braus:ba.v,br:w.vals.br})&&bs.v!==false)bs={v:true,sure:true};
       const unsure=[...w.unsure];
       if(!bs.sure&&bs.v!=null)unsure.push("b");
       if(!ba.sure&&ba.v!=null)unsure.push("braus");
